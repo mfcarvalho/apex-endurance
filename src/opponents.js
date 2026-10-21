@@ -1,4 +1,4 @@
-import {OPPONENTS as A} from './config.js';
+import {OPPONENTS as A, CAR_LIGHTS} from './config.js';
 import {clamp, damp, wrap, signedDistance} from './math.js';
 
 export function trafficTarget(car, cars, length) {
@@ -26,7 +26,7 @@ export function createOpponents(track) {
     const lane=id%2 ? A.gridLane : -A.gridLane;
     const q=track.at(s,lane);
     return {s,lane,baseLane:lane,pace:A.pace+id*A.paceStep,speed:0,name,id,
-      color:A.colors[id],finishTime:null,x:q.p.x,z:q.p.z,yaw:q.yaw};
+      color:A.colors[id],braking:false,finishTime:null,x:q.p.x,z:q.p.z,yaw:q.yaw};
   });
 }
 
@@ -64,6 +64,8 @@ export function advanceOpponents(current, player, near, track, elapsed, totalLap
     if (a.finishTime===null && a.s>=track.config.startS+totalLaps*L) {
       a.finishTime=elapsed-dt+clamp((track.config.startS+totalLaps*L-a.previousS)/Math.max(a.s-a.previousS,.001),0,1)*dt;
     }
+    const previousSpeed=traffic.find(other=>other.id===a.id).speed;
+    a.braking=previousSpeed-a.speed>CAR_LIGHTS.opponentBrakeDeceleration*dt;
     const q=track.at(a.s,a.lane);
     Object.assign(a,{x:q.p.x,z:q.p.z,yaw:q.yaw});
   }

@@ -21,7 +21,7 @@ export class RaceSimulation {
     this.#config=config;
     this.#state={mode:'menu',chosen:0,elapsed:0,lapTime:0,best:Infinity,completed:0,lastLapTime:null,lapDelta:null,
       travel:0,lastS:0,count:3.6,gridRevision:0,cameraRevision:0,
-      player:{x:0,z:0,yaw:0,roll:0,speed:0,steer:0,offroad:false},ai:[]};
+      player:{x:0,z:0,yaw:0,roll:0,speed:0,steer:0,offroad:false,braking:false},ai:[]};
     this.#resetPlayer();
   }
 
@@ -31,7 +31,7 @@ export class RaceSimulation {
 
   #resetPlayer() {
     const s=this.#state, q=this.#track.at(this.#track.config.startS-this.#track.config.playerGridOffset,this.#track.config.playerLane);
-    Object.assign(s.player,{x:q.p.x,z:q.p.z,yaw:q.yaw,roll:0});
+    Object.assign(s.player,{x:q.p.x,z:q.p.z,yaw:q.yaw,roll:0,braking:false});
     s.gridRevision++;
     s.cameraRevision++;
   }
@@ -46,7 +46,7 @@ export class RaceSimulation {
     const s=this.#state, track=this.#track;
     this.#resetPlayer();
     s.ai=createOpponents(track);
-    Object.assign(s.player,{speed:0,steer:0,offroad:false});
+    Object.assign(s.player,{speed:0,steer:0,offroad:false,braking:false});
     Object.assign(s,{elapsed:0,lapTime:0,completed:0,count:this.#config.countdown,best:Infinity,lastLapTime:null,lapDelta:null,mode:'race'});
     this.#timing=new LapTiming(track.length,this.#config.timingSampleDistance);
     this.#tracker=new LapTracker(track.length,track.config.startS,track.config.startS-track.config.playerGridOffset);

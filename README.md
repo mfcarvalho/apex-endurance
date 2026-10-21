@@ -73,6 +73,10 @@ Os valores existentes foram mantidos, inclusive a convenção original de direç
 
 Uma nova pista começa pelos dados de `TRACK`; o cenário costeiro ainda tem posições específicas que devem ser adaptadas em `scenery.js`. Novos formatos de carroceria pertencem a `cars.js`, com os dados em `CARS`. Melhorias de dinâmica pertencem a `physics.js`, sem precisar acessar DOM ou modelos. Não foram acrescentados seletores de pista, novas carrocerias ou recursos nesta etapa.
 
+## Luzes de freio
+
+As duas lanternas traseiras ficam mais intensas e vermelhas enquanto S, seta para baixo ou o botão de freio no toque estiver pressionado, inclusive com o carro parado após a largada. Ao soltar, retornam ao brilho normal. Os adversários acendem as lanternas ao desacelerar em curvas ou tráfego. Os materiais são próprios de cada carro, sem luzes dinâmicas adicionais. `CAR_LIGHTS`, em `src/config.js`, centraliza intensidade, cor e limiar de desaceleração da IA. Isso não altera a física.
+
 ## Controles preservados
 
 - W / seta para cima: acelerar.

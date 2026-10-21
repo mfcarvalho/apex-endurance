@@ -28,3 +28,9 @@ export const CAMERAS = {
   fov: 53, heights: [5,2.5,13], distances: [10,5.5,16], damping: 5,
   fovSpeed: .13, fovDamping: 2, lookAhead: 7, lookSpeed: .06,
 };
+
+// Somente aparência/sinalização; não altera a força de frenagem.
+export const CAR_LIGHTS = {
+  tailColor: 0x550000, tailIntensity: .6, brakeIntensity: 3, tailEmission: 0xb60000, brakeEmission: 0xff0800,
+  opponentBrakeDeceleration: .5, // m/s²: evita piscar em variações mínimas da IA.
+};

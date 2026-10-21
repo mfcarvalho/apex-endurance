@@ -1,9 +1,12 @@
 import * as T from '../three.module.js';
 import {box, mat} from './rendering.js';
+import {CAR_LIGHTS as LIGHTS} from './config.js';
 
 export function createCar(spec,num) {
   const dark=mat(0x172b2c),glass=mat(0x15383e,{metalness:.4,roughness:.25}),rubber=mat(0x171e20);
   const g=new T.Group(),paint=mat(spec.color,{metalness:.25,roughness:.48}),accent=mat(spec.accent,{metalness:.1});
+  const brakeLightMaterial=mat(LIGHTS.tailColor,{emissive:LIGHTS.tailEmission,emissiveIntensity:LIGHTS.tailIntensity,toneMapped:false});
+  g.userData.brakeLightMaterial=brakeLightMaterial;
   box(g,0,.63,0,2.05,.65,4.5,paint);
   box(g,0,.98,spec.body===1?.35:0,1.8,.35,2.25,paint);
   box(g,0,1.27,-.2,1.52,.4,1.65,glass);
@@ -17,7 +20,7 @@ export function createCar(spec,num) {
   for (const side of [-1,1]) {
     box(g,side*1.035,.75,0,.03,.3,2.7,accent);
     box(g,side*.72,.86,2.22,.5,.13,.05,mat(0xffefb5,{emissive:0xffd27d,emissiveIntensity:.5}));
-    box(g,side*.72,.83,-2.26,.5,.1,.05,mat(0xff3311,{emissive:0xff2211,emissiveIntensity:.6}));
+    box(g,side*.72,.83,-2.26,.5,.1,.05,brakeLightMaterial);
     for (const z of [-1.45,1.4]) {
       const wheel=new T.Mesh(new T.CylinderGeometry(.45,.45,.33,12),rubber);
       wheel.rotation.z=Math.PI/2;
@@ -82,6 +85,9 @@ export function createCarViews(scene, specs) {
       const transform = (mesh, car) => {
         mesh.position.set(car.x, 0, car.z);
         mesh.rotation.set(0, car.yaw, car.roll || 0);
+        const lamp=mesh.userData.brakeLightMaterial;
+        lamp.emissiveIntensity=car.braking?LIGHTS.brakeIntensity:LIGHTS.tailIntensity;
+        lamp.emissive.setHex(car.braking?LIGHTS.brakeEmission:LIGHTS.tailEmission);
       };
       transform(player, state.player);
       opponents.forEach((mesh, i) => transform(mesh, state.ai[i]));

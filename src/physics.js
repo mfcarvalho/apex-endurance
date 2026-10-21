@@ -3,7 +3,7 @@ import {clamp, damp} from './math.js';
 
 // Funções puras: retornam novos dados, sem meshes, DOM ou estado compartilhado.
 export function advancePlayer(current, input, spec, track, lastS, dt) {
-  const player = {...current};
+  const player = {...current, braking:!!input.brake};
   let near = track.project(player.x, player.z);
   player.offroad = near.dist > P.roadLimit;
   player.speed += ((input.accel ? spec.power * (1-player.speed/(spec.max+P.powerHeadroom)) : 0)
