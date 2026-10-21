@@ -1,5 +1,5 @@
 // Unidades: metros, segundos e radianos; velocidade interna em m/s.
-export const RACE = {laps: 3, step: 1 / 120, maxFrameDelta: .25, countdown: 3, goDuration: .8, hudEvery: 4};
+export const RACE = {laps: 3, step: 1 / 120, maxFrameDelta: .25, countdown: 3, goDuration: .8, hudEvery: 4, timingSampleDistance: 2};
 export const TRACK = {
   name: 'Costa Dourada', samples: 900, startS: 25, playerGridOffset: 32, playerLane: 2.8,
   points: [[-180,-120],[-40,-120],[120,-120],[190,-65],[180,35],[115,75],[70,25],[5,55],[-25,150],[-125,165],[-200,100],[-205,-10]],

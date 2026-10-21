@@ -28,6 +28,7 @@ test('largada, seleção, pausa, reinício e isolamento dos snapshots',()=>{
   race.togglePause();advance(race,120);
   assert.ok(race.state.elapsed>before);
   race.start();assert.equal(race.state.player.speed,0);assert.equal(race.state.completed,0);
+  assert.equal(race.state.lapTime,0);assert.equal(race.state.best,Infinity);assert.equal(race.state.lapDelta,null);
   race.menu();assert.equal(race.mode,'menu');assert.equal(race.state.ai.length,0);
 });
 
@@ -52,16 +53,22 @@ test('tráfego por 300 segundos: sete chegadas, sem volta gratuita do jogador',(
 
 test('três voltas por comandos de pilotagem produzem resultado e congelam a corrida',()=>{
   const race=new RaceSimulation(track);race.start();
+  let comparedDuringLap=false;
   // Condutor de teste: segue a curva usando a mesma API de entrada da física.
   // Não injeta posições, checkpoints ou contadores no estado.
   for(let i=0;i<120*400&&race.mode!=='finish';i++) {
     const state=race.state,p=state.player,target=track.at(state.lastS+15);
+    if(state.completed>0 && Number.isFinite(state.lapDelta))comparedDuringLap=true;
     const desired=Math.atan2(target.p.x-p.x,target.p.z-p.z);
     const delta=Math.atan2(Math.sin(desired-p.yaw),Math.cos(desired-p.yaw));
     race.step(RACE.step,{accel:p.speed<30,brake:p.speed>34,steering:Math.max(-1,Math.min(1,delta*4))});
   }
   assert.equal(race.mode,'finish');assert.equal(race.state.completed,3);
+  assert.equal(comparedDuringLap,true);
   assert.ok(Number.isFinite(race.state.best));
   assert.equal(race.ranking.length,8);
+  assert.ok(race.state.lastLapTime>0);
+  assert.equal(race.state.lapDelta,race.state.lastLapTime-race.state.best);
   const before=race.state;advance(race,120);assert.deepEqual(race.state,before);
+  race.start();assert.equal(race.state.best,Infinity);assert.equal(race.state.lapDelta,null);assert.equal(race.state.lastLapTime,null);
 });

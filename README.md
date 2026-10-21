@@ -14,6 +14,14 @@ Abra o endereço exibido no terminal, normalmente http://localhost:8000. Se a po
 npm test
 ```
 
+## Cronometragem por corrida
+
+O HUD mantém o tempo total e mostra **ATUAL**, **MELHOR** e **DIF. MELHOR**. ATUAL zera a cada volta; MELHOR considera somente voltas concluídas nesta corrida. Antes da primeira volta completa, melhor e diferença aparecem sem valor.
+
+A diferença compara o tempo atual com o tempo da melhor volta no mesmo ponto do circuito: sinal negativo/verde indica ganho; positivo/laranja indica perda. A referência usa amostras privadas por distância, interpoladas, em `src/lap-timing.js`; `RACE.timingSampleDistance` configura o espaçamento (2 m). Na chegada, ATUAL conserva a última volta e a diferença usa essa volta contra a melhor final. A cronometragem existente foi preservada: a primeira volta inclui o deslocamento do grid à linha após a largada.
+
+Pausar congela os tempos. Iniciar ou reiniciar uma corrida descarta toda a referência; não há armazenamento nem histórico entre corridas. Os onze testes atuais incluem comparação no mesmo ponto, troca da referência quando a volta melhora, proteção ao voltar pela pista e limpeza ao reiniciar. Oito testes citados abaixo descrevem a validação anterior da refatoração.
+
 ## Estrutura e responsabilidades
 
 | Arquivo | Responsabilidade |
@@ -23,6 +31,7 @@ npm test
 | `game.js` | Cria e conecta os sistemas, comandos e loop com passo fixo. |
 | `src/config.js` | Parâmetros de carros, pista, física, corrida, IA e câmeras. |
 | `src/race.js` | `RaceSimulation`: proprietário do estado e coordenador das regras. |
+| `src/lap-timing.js` | Referência temporal privada da melhor volta e delta durante a corrida. |
 | `src/rules.js` | Progresso por portões, voltas e classificação; sem DOM ou Three.js. |
 | `src/physics.js` | Aceleração, freio, direção, aderência, recuperação e contatos do jogador; funções puras. |
 | `src/opponents.js` | Grid, decisões de tráfego, trajetória e separação dos adversários; funções puras. |

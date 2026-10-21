@@ -1,4 +1,6 @@
 import {CARS, RACE, PHYSICS} from './config.js';
+import {LapTiming} from './lap-timing.js';
+import {wrap} from './math.js';
 import {LapTracker, rankRace} from './rules.js';
 import {advancePlayer, collidePlayer} from './physics.js';
 import {createOpponents, advanceOpponents} from './opponents.js';
@@ -8,6 +10,7 @@ import {createOpponents, advanceOpponents} from './opponents.js';
 export class RaceSimulation {
   #state;
   #tracker;
+  #timing;
   #track;
   #cars;
   #config;
@@ -16,7 +19,7 @@ export class RaceSimulation {
     this.#track=track;
     this.#cars=cars;
     this.#config=config;
-    this.#state={mode:'menu',chosen:0,elapsed:0,lapTime:0,best:Infinity,completed:0,
+    this.#state={mode:'menu',chosen:0,elapsed:0,lapTime:0,best:Infinity,completed:0,lastLapTime:null,lapDelta:null,
       travel:0,lastS:0,count:3.6,gridRevision:0,cameraRevision:0,
       player:{x:0,z:0,yaw:0,roll:0,speed:0,steer:0,offroad:false},ai:[]};
     this.#resetPlayer();
@@ -44,7 +47,8 @@ export class RaceSimulation {
     this.#resetPlayer();
     s.ai=createOpponents(track);
     Object.assign(s.player,{speed:0,steer:0,offroad:false});
-    Object.assign(s,{elapsed:0,lapTime:0,completed:0,count:this.#config.countdown,best:Infinity,mode:'race'});
+    Object.assign(s,{elapsed:0,lapTime:0,completed:0,count:this.#config.countdown,best:Infinity,lastLapTime:null,lapDelta:null,mode:'race'});
+    this.#timing=new LapTiming(track.length,this.#config.timingSampleDistance);
     this.#tracker=new LapTracker(track.length,track.config.startS,track.config.startS-track.config.playerGridOffset);
     s.travel=this.#tracker.progress;
     s.lastS=this.#tracker.lastS;
@@ -75,16 +79,29 @@ export class RaceSimulation {
     s.player=collidePlayer(movement.player,s.ai);
     const near=this.#track.project(s.player.x,s.player.z);
     s.player.offroad=near.dist>PHYSICS.roadLimit;
-    const crossed=this.#tracker.update(near.s,!movement.recovered && near.dist<=PHYSICS.progressLimit,
+    const validTiming=!movement.recovered && near.dist<=PHYSICS.progressLimit;
+    const crossed=this.#tracker.update(near.s,validTiming,
       Math.max(PHYSICS.minProgressStep,s.player.speed*dt+PHYSICS.progressMargin));
     s.travel=this.#tracker.progress;
     s.lastS=this.#tracker.lastS;
     if (movement.recovered) s.cameraRevision++;
     if (crossed) {
-      s.best=Math.min(s.best,s.lapTime);
+      this.#timing.complete(s.lapTime);
+      s.lastLapTime=s.lapTime;
+      s.best=this.#timing.best;
       s.lapTime=0;
       s.completed=this.#tracker.completed;
     }
-    if (s.completed>=this.#config.laps) s.mode='finish';
+    if (s.completed>=this.#config.laps) {
+      s.mode='finish';
+      s.lapDelta=s.lastLapTime-s.best;
+    } else {
+      // Comparação no mesmo ponto físico; o portão seguinte impede que uma
+      // passagem em ré pela linha seja confundida com o final da volta.
+      const distance=crossed ? 0 : wrap(near.s-this.#track.config.startS,this.#track.length);
+      const inSequence=distance<=this.#tracker.nextGate/4*this.#track.length+PHYSICS.progressMargin;
+      s.lapDelta=this.#timing.update(distance,s.lapTime,
+        crossed || (validTiming && s.travel>=0 && inSequence));
+    }
   }
 }

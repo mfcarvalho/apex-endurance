@@ -35,6 +35,12 @@ export function createInterface(track, specs, raceConfig=RACE) {
     $('#pos').innerHTML=(order.findIndex(a=>a.you)+1)+`<span>/ ${order.length}</span>`;
     $('#lap').textContent=Math.min(laps,state.completed+1)+' / '+laps;
     $('#timer').textContent=clockText(state.elapsed);
+    $('#currentLapTime').textContent=clockText(state.mode==='finish'?state.lastLapTime:state.lapTime);
+    $('#bestLapTime').textContent=Number.isFinite(state.best)?clockText(state.best):'--:--.---';
+    const delta=state.lapDelta;
+    const rounded=delta===null?null:Math.round(delta*1000);
+    $('#lapDelta').textContent=rounded===null?'—':`${rounded<0?'−':'+'}${(Math.abs(rounded)/1000).toFixed(3)} s`;
+    $('#lapDelta').dataset.pace=rounded===null?'none':rounded<0?'ahead':rounded>0?'behind':'equal';
     $('#speed').textContent=String(Math.round(speed*3.6)).padStart(3,'0');
     $('#gear').textContent=speed<1?'N':Math.min(6,1+Math.floor(speed/14));
     $('#rev').style.width=Math.min(100,25+(speed%14)/14*75)+'%';
