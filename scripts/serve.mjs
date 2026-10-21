@@ -1,14 +1,20 @@
 import {createServer} from 'node:http';
-import {readFile} from 'node:fs/promises';
+import {readFile, readdir} from 'node:fs/promises';
 
 const root = new URL('../', import.meta.url);
 const files = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
-  ...['bootstrap.js', 'game.js', 'race-core.js', 'three.module.js']
+  ...['bootstrap.js', 'game.js', 'three.module.js']
     .map(file => [`/${file}`, [file, 'text/javascript; charset=utf-8']]),
 ]);
+
+for (const entry of await readdir(new URL('src/', root), {withFileTypes:true})) {
+  if (entry.isFile() && entry.name.endsWith('.js')) {
+    files.set(`/src/${entry.name}`, [`src/${entry.name}`, 'text/javascript; charset=utf-8']);
+  }
+}
 
 const server = createServer(async (request, response) => {
   response.setHeader('Cache-Control', 'no-store');

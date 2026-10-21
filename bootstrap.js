@@ -1,5 +1,5 @@
 // Mostrar uma falha de inicialização em vez de deixar os botões inoperantes.
-import('./game.js?v=4').catch(error => {
+import('./game.js').then(({startGame})=>startGame()).catch(error => {
   console.error('Falha ao iniciar APEX:', error);
   const panel = document.querySelector('#error');
   panel.textContent = 'Não foi possível iniciar o 3D. Verifique o suporte a WebGL 2 e recarregue a página.';
