@@ -19,11 +19,11 @@ test('grid, três voltas completas e cruzamentos em ré',()=>{
   t.update(24,true,2);t.update(25,true,2);assert.equal(t.completed,1);
   drive(t,425,1225);assert.equal(t.completed,3);
 });
-test('atalhos, saltos e deslocamentos fora da pista não concedem volta',()=>{
+test('corte descarta tempo; saltos não concedem chegadas',()=>{
   const t=new LapTracker(400,25,-7);
   drive(t,-7,25);drive(t,25,150,false);drive(t,150,425);
-  assert.equal(t.completed,0);
-  t.update(220,true,2);assert.equal(t.completed,0);
+  assert.equal(t.completed,1);assert.equal(t.lastLapValid,false);
+  t.update(220,true,2);assert.equal(t.completed,1);assert.equal(t.lapValid,false);
 });
 test('tráfego ultrapassa em faixa livre e freia com ambas ocupadas',()=>{
   const self={s:390,lane:2.8,baseLane:2.8,speed:40,targetSpeed:50};

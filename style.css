@@ -12,3 +12,5 @@
 .lapTimes [data-pace="behind"]{color:#ffc285}
 .lapTimes [data-pace="none"]{color:#a3b6a7}
 @media(max-width:700px){.lapTimes{min-width:185px;padding:8px 10px;margin-top:10px}.lapTimes dd{font-size:14px}.lapTimes dt{font-size:8px;letter-spacing:1px}}
+
+.lapTimes #currentLapTime[data-valid="false"]{color:#ffc285}

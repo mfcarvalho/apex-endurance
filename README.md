@@ -16,11 +16,11 @@ npm test
 
 ## Cronometragem por corrida
 
-O HUD mantém o tempo total e mostra **ATUAL**, **MELHOR** e **DIF. MELHOR**. ATUAL zera a cada volta; MELHOR considera somente voltas concluídas nesta corrida. Antes da primeira volta completa, melhor e diferença aparecem sem valor.
+O HUD mantém o tempo total e mostra **ATUAL**, **MELHOR** e **DIF. MELHOR**. ATUAL zera a cada volta; MELHOR considera somente voltas válidas concluídas nesta corrida. Antes da primeira volta completa, melhor e diferença aparecem sem valor.
 
 A diferença compara o tempo atual com o tempo da melhor volta no mesmo ponto do circuito: sinal negativo/verde indica ganho; positivo/laranja indica perda. A referência usa amostras privadas por distância, interpoladas, em `src/lap-timing.js`; `RACE.timingSampleDistance` configura o espaçamento (2 m). Na chegada, ATUAL conserva a última volta e a diferença usa essa volta contra a melhor final. A cronometragem existente foi preservada: a primeira volta inclui o deslocamento do grid à linha após a largada.
 
-Pausar congela os tempos. Iniciar ou reiniciar uma corrida descarta toda a referência; não há armazenamento nem histórico entre corridas. Os onze testes atuais incluem comparação no mesmo ponto, troca da referência quando a volta melhora, proteção ao voltar pela pista e limpeza ao reiniciar. Oito testes citados abaixo descrevem a validação anterior da refatoração.
+Pausar congela os tempos. Iniciar ou reiniciar uma corrida descarta toda a referência; não há armazenamento nem histórico entre corridas. Os testes de cronometragem incluem comparação no mesmo ponto, troca da referência quando a volta melhora, proteção ao voltar pela pista e limpeza ao reiniciar. Oito testes citados abaixo descrevem a validação anterior da refatoração.
 
 ## Estrutura e responsabilidades
 
@@ -72,6 +72,14 @@ Edite `src/config.js`:
 Os valores existentes foram mantidos, inclusive a convenção original de direção confirmada pelo usuário. `config.js` é tratado como dado de leitura durante a execução.
 
 Uma nova pista começa pelos dados de `TRACK`; o cenário costeiro ainda tem posições específicas que devem ser adaptadas em `scenery.js`. Novos formatos de carroceria pertencem a `cars.js`, com os dados em `CARS`. Melhorias de dinâmica pertencem a `physics.js`, sem precisar acessar DOM ou modelos. Não foram acrescentados seletores de pista, novas carrocerias ou recursos nesta etapa.
+
+## Voltas inválidas e cortes
+
+Sair do limite de validação, saltar um ponto da pista ou ser reposicionado invalida o tempo da volta atual. O HUD mostra **INVÁLIDA**, suspende o delta e não acrescenta esse tempo à melhor volta. O tempo total da corrida continua avançando.
+
+O contador de voltas é independente da validade do tempo. Ao cruzar a linha para a frente, na pista e após percorrer pelo menos meia extensão líquida do circuito, a volta é encerrada mesmo que algum portão tenha sido perdido. A seguinte começa com cronômetro zero e validação renovada. O percurso mínimo evita contar a saída do grid e oscilações sobre a linha; ré e teleporte não concedem uma chegada. Os portões continuam necessários para validar um tempo.
+
+Os 15 testes atuais incluem a regressão corte → portão perdido → chegada → próxima volta válida, descarte do tempo inválido sem alterar a melhor volta, limpeza da referência temporal e prevenção de voltas duplicadas ao oscilar na linha. O teste de integração controla a consulta de superfície no primeiro portão e usa comandos de pilotagem para percorrer o circuito; não injeta contadores ou posições no estado.
 
 ## Luzes de freio
 

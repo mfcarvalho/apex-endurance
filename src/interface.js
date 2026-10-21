@@ -4,6 +4,7 @@ const $=selector=>document.querySelector(selector);
 const hide=selector=>$(selector).classList.add('hidden');
 const show=selector=>$(selector).classList.remove('hidden');
 function clockText(t) {
+  if(t===null || !Number.isFinite(t))return '--:--.---';
   const ms=Math.floor(t*1000);
   return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(Math.floor(t%60)).padStart(2,'0')}.${String(ms%1000).padStart(3,'0')}`;
 }
@@ -35,7 +36,9 @@ export function createInterface(track, specs, raceConfig=RACE) {
     $('#pos').innerHTML=(order.findIndex(a=>a.you)+1)+`<span>/ ${order.length}</span>`;
     $('#lap').textContent=Math.min(laps,state.completed+1)+' / '+laps;
     $('#timer').textContent=clockText(state.elapsed);
-    $('#currentLapTime').textContent=clockText(state.mode==='finish'?state.lastLapTime:state.lapTime);
+    const lapValid=state.mode==='finish'?state.lastLapValid:state.lapValid;
+    $('#currentLapTime').textContent=lapValid?clockText(state.mode==='finish'?state.lastLapTime:state.lapTime):'INVÁLIDA';
+    $('#currentLapTime').dataset.valid=String(lapValid);
     $('#bestLapTime').textContent=Number.isFinite(state.best)?clockText(state.best):'--:--.---';
     const delta=state.lapDelta;
     const rounded=delta===null?null:Math.round(delta*1000);
@@ -44,8 +47,8 @@ export function createInterface(track, specs, raceConfig=RACE) {
     $('#speed').textContent=String(Math.round(speed*3.6)).padStart(3,'0');
     $('#gear').textContent=speed<1?'N':Math.min(6,1+Math.floor(speed/14));
     $('#rev').style.width=Math.min(100,25+(speed%14)/14*75)+'%';
-    $('#drivingStatus').textContent=player.offroad?'FORA DA PISTA · ADERÊNCIA REDUZIDA':state.best<Infinity?'MELHOR VOLTA '+clockText(state.best):'CONTROLE DE TRAÇÃO ATIVO';
-    $('#drivingStatus').style.color=player.offroad?'#ffc285':'';
+    $('#drivingStatus').textContent=!lapValid?'VOLTA INVÁLIDA · TEMPO DESCARTADO':player.offroad?'FORA DA PISTA · ADERÊNCIA REDUZIDA':state.best<Infinity?'MELHOR VOLTA '+clockText(state.best):'CONTROLE DE TRAÇÃO ATIVO';
+    $('#drivingStatus').style.color=!lapValid || player.offroad?'#ffc285':'';
     $('#leaderboard').innerHTML=order.map((a,i)=>`<div class="rankrow ${a.you?'you':''}"><span>${String(i+1).padStart(2,'0')} &nbsp; ${a.name}</span><span>${a.you?'27':'GT3'}</span></div>`).join('');
     minimap(state);
   }

@@ -72,3 +72,39 @@ test('três voltas por comandos de pilotagem produzem resultado e congelam a cor
   const before=race.state;advance(race,120);assert.deepEqual(race.state,before);
   race.start();assert.equal(race.state.best,Infinity);assert.equal(race.state.lapDelta,null);assert.equal(race.state.lastLapTime,null);
 });
+
+test('portão perdido fora da pista não bloqueia a próxima volta nem salva tempo inválido',()=>{
+  // Fixture: sinaliza saída de pista no primeiro portão da primeira volta.
+  // A pilotagem continua pela API normal e só a consulta de superfície é controlada.
+  const base=createTrack();let forceOffroad=true;
+  const testTrack={...base,project(x,z){
+    const near=base.project(x,z);
+    const gate=base.config.startS+base.length/4;
+    return forceOffroad && Math.abs(near.s-gate)<12 ? {...near,dist:12} : near;
+  }};
+  const race=new RaceSimulation(testTrack);race.start();
+  let frozenTime=null,checkedReset=false,sawValidLap=false;
+  for(let i=0;i<120*300 && race.mode!=='finish';i++) {
+    const s=race.state,p=s.player,q=base.at(s.lastS+15);
+    if(!s.lapValid) {
+      if(frozenTime===null)frozenTime=s.lapTime;
+      else assert.equal(s.lapTime,frozenTime);
+      assert.equal(s.lapDelta,null);
+    }
+    if(s.completed===1 && !checkedReset) {
+      assert.notEqual(frozenTime,null);
+      assert.equal(s.lastLapValid,false);assert.equal(s.lastLapTime,null);
+      assert.equal(s.best,Infinity);assert.equal(s.lapTime,0);
+      assert.equal(s.lapValid,true);checkedReset=true;forceOffroad=false;
+    }
+    if(s.completed>=2) {
+      assert.equal(s.lastLapValid,true);assert.ok(Number.isFinite(s.best));sawValidLap=true;
+    }
+    const desired=Math.atan2(q.p.x-p.x,q.p.z-p.z);
+    const delta=Math.atan2(Math.sin(desired-p.yaw),Math.cos(desired-p.yaw));
+    race.step(RACE.step,{accel:p.speed<30,brake:p.speed>34,steering:Math.max(-1,Math.min(1,delta*4))});
+  }
+  assert.equal(checkedReset,true);assert.equal(sawValidLap,true);
+  assert.equal(race.state.completed,3);assert.equal(race.mode,'finish');
+  race.start();assert.equal(race.state.lapValid,true);assert.equal(race.state.lastLapValid,null);
+});

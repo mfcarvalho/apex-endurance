@@ -37,3 +37,18 @@ test('voltar pela pista não regrava a referência do primeiro trajeto',()=>{
   assert.equal(timing.update(25,5),0);
   assert.equal(timing.update(50,10),0);
 });
+
+test('tempo inválido é descartado sem substituir a melhor e sem contaminar a próxima volta',()=>{
+  const timing=new LapTiming(100);
+  timing.update(0,0);timing.update(50,10);timing.complete(20);
+  timing.update(50,1);timing.complete(2,false);
+  assert.equal(timing.best,20);
+  assert.equal(timing.update(0,0),0);
+  assert.equal(timing.update(50,12),2);
+  timing.complete(24);
+  assert.equal(timing.best,20);
+  const noValidLap=new LapTiming(100);
+  noValidLap.update(50,1);noValidLap.complete(2,false);
+  assert.equal(noValidLap.best,Infinity);
+  assert.equal(noValidLap.update(50,5),null);
+});

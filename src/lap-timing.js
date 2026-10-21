@@ -23,14 +23,17 @@ export class LapTiming {
     return reference===null ? null : time-reference;
   }
 
-  complete(time) {
-    const last=this.#current.at(-1);
-    if(last?.distance===this.#length)last.time=time;
-    else this.#current.push({distance:this.#length,time});
-    if (time<this.#best) {
-      this.#best=time;
-      this.#reference=this.#current;
+  complete(time, valid=true) {
+    if (valid) {
+      const last=this.#current.at(-1);
+      if(last?.distance===this.#length)last.time=time;
+      else this.#current.push({distance:this.#length,time});
+      if (time<this.#best) {
+        this.#best=time;
+        this.#reference=this.#current;
+      }
     }
+    // Descartar uma volta inválida também reinicia a amostragem da próxima.
     this.#current=[{distance:0,time:0}];
   }
 
